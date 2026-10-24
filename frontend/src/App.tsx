@@ -44,10 +44,79 @@ const DEFAULT_PARAMS: ModulateRequest = {
   modulator_level: 0.7,
 };
 
-function formatHz(value: number): string {
-  if (value >= 100) return value.toFixed(0);
-  if (value >= 10) return value.toFixed(1);
-  return value.toFixed(2);
+type ParameterControlProps = {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+};
+
+function ParameterControl({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+}: ParameterControlProps) {
+  const decimalPlaces = step.toString().split(".")[1]?.length ?? 0;
+  const formatValue = (number: number) => number.toFixed(decimalPlaces);
+  const [draft, setDraft] = useState(formatValue(value));
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (!isEditing) setDraft(formatValue(value));
+  }, [isEditing, value, decimalPlaces]);
+
+  const commitDraft = () => {
+    const parsed = draft.trim() === "" ? value : Number(draft);
+    const next = Number.isFinite(parsed)
+      ? Math.min(max, Math.max(min, parsed))
+      : value;
+    onChange(next);
+    setDraft(formatValue(next));
+    setIsEditing(false);
+  };
+
+  return (
+    <label className="parameter-control">
+      <span>{label}</span>
+      <div className="control-row">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          aria-label={`${label} スライダー`}
+          onChange={(event) => onChange(Number(event.target.value))}
+        />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={draft}
+          aria-label={label}
+          onFocus={() => setIsEditing(true)}
+          onChange={(event) => {
+            const nextDraft = event.target.value;
+            setDraft(nextDraft);
+            const parsed = event.target.valueAsNumber;
+            if (Number.isFinite(parsed) && parsed >= min && parsed <= max) {
+              onChange(parsed);
+            }
+          }}
+          onBlur={commitDraft}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.currentTarget.blur();
+          }}
+        />
+      </div>
+    </label>
+  );
 }
 
 function derivedLabel(kind: ModulationKind, result: ModulateResponse): string {
@@ -143,71 +212,56 @@ export default function App() {
         </div>
 
         <div className="sliders">
-          <label>
-            <span>キャリア周波数 fc {formatHz(params.carrier_freq)} Hz</span>
-            <input
-              type="range"
-              min={80}
-              max={2000}
-              step={1}
-              value={params.carrier_freq}
-              onChange={(e) =>
-                setParams((p) => ({ ...p, carrier_freq: Number(e.target.value) }))
-              }
-            />
-          </label>
-          <label>
-            <span>キャリアレベル Ac {params.carrier_level.toFixed(2)}</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={params.carrier_level}
-              onChange={(e) =>
-                setParams((p) => ({ ...p, carrier_level: Number(e.target.value) }))
-              }
-            />
-          </label>
-          <label>
-            <span>モジュレータ周波数 fm {formatHz(params.modulator_freq)} Hz</span>
-            <input
-              type="range"
-              min={0.5}
-              max={400}
-              step={0.5}
-              value={params.modulator_freq}
-              onChange={(e) =>
-                setParams((p) => ({ ...p, modulator_freq: Number(e.target.value) }))
-              }
-            />
-          </label>
-          <label>
-            <span>変調の深さ {params.modulator_level.toFixed(2)}</span>
-            <input
-              type="range"
-              min={0}
-              max={1.5}
-              step={0.01}
-              value={params.modulator_level}
-              onChange={(e) =>
-                setParams((p) => ({ ...p, modulator_level: Number(e.target.value) }))
-              }
-            />
-          </label>
-          <label>
-            <span>長さ {params.duration_sec.toFixed(1)} s</span>
-            <input
-              type="range"
-              min={0.4}
-              max={3}
-              step={0.1}
-              value={params.duration_sec}
-              onChange={(e) =>
-                setParams((p) => ({ ...p, duration_sec: Number(e.target.value) }))
-              }
-            />
-          </label>
+          <ParameterControl
+            label="キャリア周波数 fc (Hz)"
+            value={params.carrier_freq}
+            min={80}
+            max={2000}
+            step={1}
+            onChange={(value) =>
+              setParams((p) => ({ ...p, carrier_freq: value }))
+            }
+          />
+          <ParameterControl
+            label="キャリアレベル Ac"
+            value={params.carrier_level}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(value) =>
+              setParams((p) => ({ ...p, carrier_level: value }))
+            }
+          />
+          <ParameterControl
+            label="モジュレータ周波数 fm (Hz)"
+            value={params.modulator_freq}
+            min={0.5}
+            max={400}
+            step={0.5}
+            onChange={(value) =>
+              setParams((p) => ({ ...p, modulator_freq: value }))
+            }
+          />
+          <ParameterControl
+            label="変調の深さ"
+            value={params.modulator_level}
+            min={0}
+            max={1.5}
+            step={0.01}
+            onChange={(value) =>
+              setParams((p) => ({ ...p, modulator_level: value }))
+            }
+          />
+          <ParameterControl
+            label="長さ (秒)"
+            value={params.duration_sec}
+            min={0.4}
+            max={3}
+            step={0.1}
+            onChange={(value) =>
+              setParams((p) => ({ ...p, duration_sec: value }))
+            }
+          />
         </div>
         {error ? <p className="error">{error}</p> : null}
       </section>

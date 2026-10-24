@@ -5,7 +5,7 @@
 ## 構成
 
 - `backend/` — FastAPI + NumPy。`POST /api/modulate` で 4 方式の PCM と可視化用データを返す
-- `frontend/` — Vite + React。共有スライダ、再生、波形／スペクトル表示
+- `frontend/` — Vite + React。共有スライダと数値入力、再生、波形／スペクトル表示
 
 ## 起動方法（Windows / PowerShell）
 
