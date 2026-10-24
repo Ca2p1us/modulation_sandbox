@@ -9,14 +9,36 @@
 
 ## 起動方法（Windows / PowerShell）
 
-Python と Node.js/npm をインストールしてください。リポジトリのルートで PowerShell を開き、初回のみ各ターミナルでセットアップを行います。
+### Docker Compose を使う（推奨）
+
+Docker Desktop をインストールして起動し、リポジトリのルートで PowerShell を開いて実行します。初回はイメージのビルドに時間がかかります。
+
+```powershell
+docker compose up --build
+```
+
+起動後、ブラウザーで [http://127.0.0.1:5173](http://127.0.0.1:5173) を開きます。終了するときは `Ctrl+C` を押します。
+コンテナも停止・削除する場合は次を実行します。
+
+```powershell
+docker compose down
+```
+
+Python と Node.js/npm を使って個別に起動する場合は、以下の手順を使います。
+ターミナルを二つ起動します。
 
 ### 1. バックエンド
 
 1つ目のターミナルで、仮想環境を作成して依存パッケージをインストールします。
+初めにbackendディレクトリに移動します。
 
 ```powershell
 cd backend
+```
+
+移動後に以下のコマンドを実行し、セットアップを行います。
+
+```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -30,7 +52,8 @@ uvicorn app.main:app --reload --port 8000
 
 ### 2. フロントエンド
 
-別のターミナルをリポジトリのルートで開き、初回のみ依存パッケージをインストールします。
+別のターミナルをリポジトリのルートで開き、frontendディレクトリに移動します。
+初回のみ依存パッケージをインストールします。
 
 ```powershell
 cd frontend
@@ -57,7 +80,7 @@ pytest -q
 
 ## パラメータの解釈
 
-スライダは 4 方式で共通です。`modulator_level` の意味だけ方式ごとに異なります。
+スライダ、入力欄は 4 方式で共通です。`modulator_level` の意味だけ以下のように方式ごとに異なります。
 
 - AM: 変調度 `μ`
 - FM: 最大周波数偏移 `Δf = modulator_level × 2000 Hz`、変調指数 `β = Δf / fm`
