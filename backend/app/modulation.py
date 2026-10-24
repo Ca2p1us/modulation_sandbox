@@ -92,17 +92,30 @@ def generate_modulations(
     if n < 16:
         raise ValueError("duration produces too few samples")
 
+    # 時刻の系列tを生成する
     t = np.arange(n, dtype=np.float64) / sample_rate
     two_pi = 2.0 * np.pi
+    # 時刻tにおける変調信号m(t)を計算する
     m = np.cos(two_pi * modulator_freq * t)
+    # 時刻tにおけるキャリアの位相を計算する
     carrier_phase = two_pi * carrier_freq * t
     carrier = np.cos(carrier_phase)
+
+    # mu = 変調深度
+    # delta_f = 周波数偏移の最大値
+    # beta = FM変調の係数
+    # kp = PM変調の係数
 
     mu = float(modulator_level)
     delta_f = float(modulator_level * DELTA_F_MAX_HZ)
     beta = float(delta_f / modulator_freq) if modulator_freq > 0 else 0.0
     kp = float(modulator_level * KP_MAX_RAD)
 
+    # am変調 = キャリアレベル * (1 + mu * m) * キャリア信号
+    # fm変調では変調信号の積分が必要なのでcosの積分結果をsinで代替
+    # fm変調 = キャリアレベル * cos(キャリア位相 + beta * sin(2π * modulator_freq * t))
+    # pm変調 = キャリアレベル * cos(キャリア位相 + kp * m)
+    # rm変調 = キャリアレベル * modulator_level * キャリア信号
     am = carrier_level * (1.0 + mu * m) * carrier
     fm = carrier_level * np.cos(carrier_phase + beta * np.sin(two_pi * modulator_freq * t))
     pm = carrier_level * np.cos(carrier_phase + kp * m)
